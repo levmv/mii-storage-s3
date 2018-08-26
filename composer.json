@@ -1,0 +1,21 @@
+{
+  "name": "levmorozov/mii-storage-s3",
+  "type": "library",
+  "description": "Mii s3 storage component",
+  "keywords": [
+    "mii",
+    "amazon s3"
+  ],
+  "homepage": "https://github.com/levmorozov/mii-storage-s3",
+  "license": "MIT",
+  "require": {
+    "php": ">=7.1",
+    "levmorozov/mii" : "1.*",
+    "aws/aws-sdk-php": "^3.66"
+  },
+  "autoload": {
+    "psr-4": {
+      "levmorozov\\s3storage\\": "src/"
+    }
+  }
+}
