@@ -21,8 +21,7 @@ class S3 extends Storage implements FileSystemInterface
      */
     protected $s3;
 
-    public function init($config)
-    {
+    public function init($config) {
         parent::init($config);
 
         $credentials = new Credentials($this->key, $this->secret);
@@ -34,40 +33,37 @@ class S3 extends Storage implements FileSystemInterface
         ]);
     }
 
-    public function exist(string $path)
-    {
+    public function exist(string $path) {
         return $this->s3->doesObjectExist($this->bucket, $this->clean($path));
     }
 
-    public function get(string $path)
-    {
+    // Warning: This method loads the entire downloadable contents into memory!
+    public function get(string $path) {
         $object = $this->get_object($path);
 
-        header("Content-Type: {$object['ContentType']}");
-        echo $object['Body'];
+        return (string)$object['Body'];
     }
 
-    public function put(string $path, $content)
-    {
+    /**
+     * @param string $path
+     * @param $content Content of the file. May be a resource returned from an fopen call
+     * @return int|bool
+     */
+    public function put(string $path, $content) {
         try {
-
-            $result = $this->s3->putObject([
+            $this->s3->putObject([
                 'Bucket' => $this->bucket,
                 'Key' => $this->clean($path),
                 'Body' => $content
             ]);
-
-            // TODO: В результате нет размера записанного файла для имитации ответа file_put_contents
+            return 1;
 
         } catch (AwsException $e) {
-
-            $this->error($e);
-            return false;
+            return $this->error($e);
         }
     }
 
-    public function delete(string $path)
-    {
+    public function delete(string $path) {
         try {
 
             $this->s3->deleteObject([
@@ -76,26 +72,22 @@ class S3 extends Storage implements FileSystemInterface
             ]);
 
         } catch (AwsException $e) {
-
-            $this->error($e);
-            return false;
+            return $this->error($e);
         }
 
         return true;
     }
 
-    public function size(string $path)
-    {
-        return $this->get_object($path)['ContentLength'];
+    public function size(string $path) {
+        $length = $this->get_object($path)['ContentLength'];
+        return $length !== null ? (int) $length : false;
     }
 
-    public function modified(string $path)
-    {
+    public function modified(string $path) {
         return strtotime($this->get_object($path)['@metadata']['headers']['last-modified']);
     }
 
-    public function copy(string $from, string $to)
-    {
+    public function copy(string $from, string $to) {
         try {
 
             $this->s3->copyObject([
@@ -106,26 +98,22 @@ class S3 extends Storage implements FileSystemInterface
 
         } catch (AwsException $e) {
 
-            $this->error($e);
-            return false;
+            return $this->error($e);
         }
 
         return true;
     }
 
-    public function move(string $from, string $to)
-    {
+    public function move(string $from, string $to) {
         $this->copy($from, $to);
         $this->delete($from);
     }
 
-    public function url(string $path)
-    {
+    public function url(string $path) {
         return $this->get_object($path)['@metadata']['effectiveUri'];
     }
 
-    public function files(string $path)
-    {
+    public function files(string $path) {
         try {
 
             $result = $this->s3->listObjects([
@@ -133,32 +121,30 @@ class S3 extends Storage implements FileSystemInterface
                 'Prefix' => $this->clean($path)
             ]);
 
-            return array_map(function ($object) {
-                return $object['Key'];
-            }, $result['Contents']);
+            if (isset($result['Contents'])) {
+                return array_map(function ($object) {
+                    return $object['Key'];
+                }, $result['Contents']);
+            }
 
         } catch (AwsException $e) {
-
             $this->error($e);
-            return false;
         }
+        return false;
     }
 
-    public function mkdir(string $path, $mode = 0777)
-    {
+    public function mkdir(string $path, $mode = 0777) {
         // TODO: ?
         // https://stackoverflow.com/questions/38965266/how-to-create-a-folder-within-s3-bucket-using-php
     }
 
-    protected function clean(string $path)
-    {
+    protected function clean(string $path) {
         if (strpos($path, '/') === 0)
             return substr($path, 1);
         return $path;
     }
 
-    protected function get_object(string $path)
-    {
+    protected function get_object(string $path) {
         try {
 
             return $this->s3->getObject([
@@ -179,8 +165,8 @@ class S3 extends Storage implements FileSystemInterface
         }
     }
 
-    protected function error(AwsException $e)
-    {
+    protected function error(AwsException $e) {
         \Mii::error('AWS Error: ' . $e->getAwsErrorCode() . ' (' . $e->getAwsErrorType() . '): ' . $e->getAwsErrorMessage());
+        return false;
     }
 }
