@@ -16,6 +16,9 @@ class S3 extends Storage implements FileSystemInterface
     protected $key = '';
     protected $secret = '';
 
+    // custom endpoint
+    protected $endpoint;
+
     /**
      * @var S3Client
      */
@@ -26,11 +29,17 @@ class S3 extends Storage implements FileSystemInterface
 
         $credentials = new Credentials($this->key, $this->secret);
 
-        $this->s3 = new S3Client([
+        $args = [
             'version' => 'latest',
             'region' => $this->region,
+            'endpoint' => $this->endpoint,
             'credentials' => $credentials
-        ]);
+        ];
+
+        if($this->endpoint)
+            $args['endpoint'] = $this->endpoint;
+
+        $this->s3 = new S3Client($args);
     }
 
     public function exist(string $path) {
