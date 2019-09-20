@@ -2,9 +2,7 @@
 
 namespace levmorozov\s3storage;
 
-use Aws\Credentials\Credentials;
-use Aws\Exception\AwsException;
-use Aws\S3\S3Client;
+use mii\core\Exception;
 use mii\storage\FileSystemInterface;
 use mii\storage\Storage;
 
@@ -20,37 +18,43 @@ class S3 extends Storage implements FileSystemInterface
     protected $endpoint;
 
     /**
-     * @var S3Client
+     * @var \levmorozov\s3\S3
      */
     protected $s3;
 
     public function init($config) {
         parent::init($config);
-
-        $credentials = new Credentials($this->key, $this->secret);
-
-        $args = [
-            'version' => 'latest',
-            'region' => $this->region,
-            'endpoint' => $this->endpoint,
-            'credentials' => $credentials
-        ];
-
-        if($this->endpoint)
-            $args['endpoint'] = $this->endpoint;
-
-        $this->s3 = new S3Client($args);
+        $this->s3 = new \levmorozov\s3\S3($this->key, $this->secret, $this->endpoint, $this->region);
     }
 
     public function exist(string $path) {
-        return $this->s3->doesObjectExist($this->bucket, $this->clean($path));
+
+        $response = $this->s3->getObjectInfo([
+            'Bucket' => $this->bucket,
+            'Key' => $this->clean($path)
+        ]);
+
+        if($response['error'])
+            return false;
+
+        return true;
     }
 
     // Warning: This method loads the entire downloadable contents into memory!
     public function get(string $path) {
-        $object = $this->get_object($path);
 
-        return (string)$object['Body'];
+        $response = $this->s3->getObject([
+            'Bucket' => $this->bucket,
+            'Key' => $this->clean($path)
+        ]);
+
+        if($response['error']) {
+            if($response['error']['code'] === 'NoSuchKey')
+                $this->error($response['error']);
+            return false;
+        }
+
+        return (string)$response['body'];
     }
 
     /**
@@ -59,58 +63,63 @@ class S3 extends Storage implements FileSystemInterface
      * @return int|bool
      */
     public function put(string $path, $content) {
-        try {
-            $this->s3->putObject([
-                'Bucket' => $this->bucket,
-                'Key' => $this->clean($path),
-                'Body' => $content
-            ]);
-            return 1;
 
-        } catch (AwsException $e) {
-            return $this->error($e);
+        $response = $this->s3->putObject([
+            'Bucket' => $this->bucket,
+            'Key' => $this->clean($path),
+            'Body' => $content
+        ]);
+        if($response['error']) {
+            return $this->error($response['error']);
         }
+        return 1;
     }
 
     public function delete(string $path) {
-        try {
 
-            $this->s3->deleteObject([
-                'Bucket' => $this->bucket,
-                'Key' => $this->clean($path)
-            ]);
+        $response = $this->s3->deleteObject([
+            'Bucket' => $this->bucket,
+            'Key' => $this->clean($path)
+        ]);
 
-        } catch (AwsException $e) {
-            return $this->error($e);
+        if($response['error']) {
+            return $this->error($response['error']);
         }
-
         return true;
     }
 
     public function size(string $path) {
-        $length = $this->get_object($path)['ContentLength'];
+
+        $response = $this->s3->getObjectInfo([
+            'Bucket' => $this->bucket,
+            'Key' => $this->clean($path)
+        ]);
+
+        if($response['error'])
+            return false;
+
+        $length = $response['headers']['content-length'] ?? null;
+
         return $length !== null ? (int) $length : false;
     }
 
     public function modified(string $path) {
-        return strtotime($this->get_object($path)['@metadata']['headers']['last-modified']);
+
+        $response = $this->s3->getObjectInfo([
+            'Bucket' => $this->bucket,
+            'Key' => $this->clean($path)
+        ]);
+
+        if($response['error'])
+            return false;
+
+        $date = $response['headers']['last-modified'] ?? null;
+
+        return $date !== null ? strtotime($date) : false;
     }
 
     public function copy(string $from, string $to) {
-        try {
-
-            $this->s3->copyObject([
-                'Bucket' => $this->bucket,
-                'Key' => $this->clean($to),
-                'CopySource' => $this->bucket . '/' . $this->clean($from)
-            ]);
-
-        } catch (AwsException $e) {
-
-            return $this->error($e);
-        }
-
-        return true;
+        throw new Exception("Not implemented yet");
     }
 
     public function move(string $from, string $to) {
@@ -123,23 +132,7 @@ class S3 extends Storage implements FileSystemInterface
     }
 
     public function files(string $path) {
-        try {
-
-            $result = $this->s3->listObjects([
-                'Bucket' => $this->bucket,
-                'Prefix' => $this->clean($path)
-            ]);
-
-            if (isset($result['Contents'])) {
-                return array_map(function ($object) {
-                    return $object['Key'];
-                }, $result['Contents']);
-            }
-
-        } catch (AwsException $e) {
-            $this->error($e);
-        }
-        return false;
+        throw new Exception("Not implemented yet");
     }
 
     public function mkdir(string $path, $mode = 0777) {
@@ -153,29 +146,8 @@ class S3 extends Storage implements FileSystemInterface
         return $path;
     }
 
-    protected function get_object(string $path) {
-        try {
-
-            return $this->s3->getObject([
-                'Bucket' => $this->bucket,
-                'Key' => $this->clean($path)
-            ]);
-
-        } catch (AwsException $e) {
-
-            switch ($e->getAwsErrorCode()) {
-                case 'NoSuchKey':
-                    break;
-                default:
-                    $this->error($e);
-            }
-
-            return false;
-        }
-    }
-
-    protected function error(AwsException $e) {
-        \Mii::error('AWS Error: ' . $e->getAwsErrorCode() . ' (' . $e->getAwsErrorType() . '): ' . $e->getAwsErrorMessage());
+    protected function error($error) {
+        \Mii::error('S3 Error. ' . $error['code'] . ': ' . $error['message']);
         return false;
     }
 }

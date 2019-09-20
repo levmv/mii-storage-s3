@@ -11,11 +11,9 @@
   "require": {
     "php": ">=7.1",
     "levmorozov/mii" : "^1.4",
-    "aws/aws-sdk-php": "^3.66"
+    "levmorozov/amazon-s3-php" : "dev-master"
   },
   "autoload": {
-    "psr-4": {
-      "levmorozov\\s3storage\\": "src/"
-    }
+    "classmap" : ["src/S3.php"]
   }
 }
