@@ -5,6 +5,7 @@ namespace levmorozov\s3storage;
 use mii\core\Exception;
 use mii\storage\FileSystemInterface;
 use mii\storage\Storage;
+use mii\web\UploadedFile;
 
 class S3 extends Storage implements FileSystemInterface
 {
@@ -64,10 +65,27 @@ class S3 extends Storage implements FileSystemInterface
      */
     public function put(string $path, $content) {
 
+        if($content instanceof UploadedFile) {
+            return $this->put_file($path, $content->tmp_name);
+        }
+
         $response = $this->s3->putObject([
             'Bucket' => $this->bucket,
             'Key' => $this->clean($path),
             'Body' => $content
+        ]);
+
+        if($response['error']) {
+            return $this->error($response['error']);
+        }
+        return 1;
+    }
+
+    public function put_file(string $path, string $from) {
+        $response = $this->s3->putObject([
+            'Bucket' => $this->bucket,
+            'Key' => $this->clean($path),
+            'SourceFile' => $from
         ]);
         if($response['error']) {
             return $this->error($response['error']);
