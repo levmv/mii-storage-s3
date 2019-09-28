@@ -23,7 +23,9 @@ class S3 extends Storage implements FileSystemInterface
      */
     protected $s3;
 
-    public function init($config) {
+
+    public function init(array $config = []): void
+    {
         parent::init($config);
         $this->s3 = new \levmorozov\s3\S3($this->key, $this->secret, $this->endpoint, $this->region);
     }
