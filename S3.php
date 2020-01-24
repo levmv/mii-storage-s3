@@ -2,26 +2,23 @@
 
 namespace levmorozov\s3storage;
 
+use mii\core\Component;
 use mii\core\Exception;
-use mii\storage\FileSystemInterface;
-use mii\storage\Storage;
+use mii\storage\StorageInterface;
 use mii\web\UploadedFile;
 
-class S3 extends Storage implements FileSystemInterface
+class S3 extends Component implements StorageInterface
 {
-    protected $region = 'eu-central-1';
-    protected $bucket = '';
+    protected string $region = 'eu-central-1';
+    protected string $bucket = '';
 
-    protected $key = '';
-    protected $secret = '';
+    protected string $key = '';
+    protected string $secret = '';
 
     // custom endpoint
-    protected $endpoint;
+    protected string $endpoint;
 
-    /**
-     * @var \levmorozov\s3\S3
-     */
-    protected $s3;
+    protected \levmorozov\s3\S3 $s3;
 
 
     public function init(array $config = []): void
@@ -64,6 +61,7 @@ class S3 extends Storage implements FileSystemInterface
      * @param string $path
      * @param $content Content of the file. May be a resource returned from an fopen call
      * @return int|bool
+     * @throws \Exception
      */
     public function put(string $path, $content) {
 

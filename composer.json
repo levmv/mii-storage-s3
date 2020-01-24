@@ -9,11 +9,11 @@
   "homepage": "https://github.com/levmorozov/mii-storage-s3",
   "license": "MIT",
   "require": {
-    "php": ">=7.1",
-    "levmorozov/mii" : ">=1.8.1",
+    "php": ">=7.4",
+    "levmorozov/mii" : ">=1.9.0",
     "levmorozov/amazon-s3-php" : "dev-master"
   },
   "autoload": {
-    "classmap" : ["src/S3.php"]
+    "classmap" : ["S3.php"]
   }
 }
