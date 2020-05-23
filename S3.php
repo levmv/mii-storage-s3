@@ -1,10 +1,9 @@
 <?php declare(strict_types=1);
 
-namespace levmorozov\s3storage;
+namespace mii\storage;
 
 use mii\core\Component;
 use mii\core\Exception;
-use mii\storage\StorageInterface;
 use mii\web\UploadedFile;
 
 class S3 extends Component implements StorageInterface
@@ -61,7 +60,7 @@ class S3 extends Component implements StorageInterface
 
     /**
      * @param string $path
-     * @param $content Content of the file. May be a resource returned from an fopen call
+     * @param        $content Content of the file. May be a resource returned from an fopen call
      * @return int|bool
      * @throws \Exception
      */
