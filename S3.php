@@ -68,7 +68,7 @@ class S3 extends Component implements StorageInterface
     {
 
         if ($content instanceof UploadedFile) {
-            return $this->put_file($path, $content->tmp_name);
+            return $this->putFile($path, $content->tmp_name);
         }
 
         $response = $this->s3->putObject([
