@@ -83,7 +83,7 @@ class S3 extends Component implements StorageInterface
         return 1;
     }
 
-    public function put_file(string $path, string $from)
+    public function putFile(string $path, string $from)
     {
         $response = $this->s3->putObject([
             'Bucket' => $this->bucket,

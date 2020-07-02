@@ -10,7 +10,7 @@
   "license": "MIT",
   "require": {
     "php": ">=7.4",
-    "levmorozov/mii" : ">=1.9.0",
+    "levmorozov/mii": "^1.10.0",
     "levmorozov/amazon-s3-php" : "~0.0.1"
   },
   "autoload": {
