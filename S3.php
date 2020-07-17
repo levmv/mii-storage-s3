@@ -60,13 +60,12 @@ class S3 extends Component implements StorageInterface
 
     /**
      * @param string $path
-     * @param        $content Content of the file. May be a resource returned from an fopen call
+     * @param mixed  $content Content of the file. May be a resource returned from an fopen call
      * @return int|bool
      * @throws \Exception
      */
     public function put(string $path, $content)
     {
-
         if ($content instanceof UploadedFile) {
             return $this->putFile($path, $content->tmp_name);
         }
@@ -83,6 +82,11 @@ class S3 extends Component implements StorageInterface
         return 1;
     }
 
+    /**
+     * @param string $path Path where to put a file
+     * @param string $from Path to local file
+     * @return bool|int
+     */
     public function putFile(string $path, string $from)
     {
         $response = $this->s3->putObject([
@@ -98,7 +102,6 @@ class S3 extends Component implements StorageInterface
 
     public function delete(string $path)
     {
-
         $response = $this->s3->deleteObject([
             'Bucket' => $this->bucket,
             'Key' => $this->clean($path)
@@ -112,7 +115,6 @@ class S3 extends Component implements StorageInterface
 
     public function size(string $path)
     {
-
         $response = $this->s3->getObjectInfo([
             'Bucket' => $this->bucket,
             'Key' => $this->clean($path)
@@ -128,7 +130,6 @@ class S3 extends Component implements StorageInterface
 
     public function modified(string $path)
     {
-
         $response = $this->s3->getObjectInfo([
             'Bucket' => $this->bucket,
             'Key' => $this->clean($path)
