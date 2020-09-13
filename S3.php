@@ -15,7 +15,7 @@ class S3 extends Component implements StorageInterface
     protected string $secret = '';
 
     // custom endpoint
-    protected string $endpoint;
+    protected ?string $endpoint = null;
 
     protected \levmorozov\s3\S3 $s3;
 
@@ -34,24 +34,25 @@ class S3 extends Component implements StorageInterface
             'Key' => $this->clean($path)
         ]);
 
-        if ($response['error'])
+        if ($response['error']) {
             return false;
+        }
 
         return true;
     }
 
-    // Warning: This method loads the entire downloadable contents into memory!
+    // Warning: This method loads the entire downloaded contents into memory!
     public function get(string $path)
     {
-
         $response = $this->s3->getObject([
             'Bucket' => $this->bucket,
             'Key' => $this->clean($path)
         ]);
 
         if ($response['error']) {
-            if ($response['error']['code'] === 'NoSuchKey')
+            if ($response['error']['code'] === 'NoSuchKey') {
                 $this->error($response['error']);
+            }
             return false;
         }
 
@@ -86,6 +87,7 @@ class S3 extends Component implements StorageInterface
      * @param string $path Path where to put a file
      * @param string $from Path to local file
      * @return bool|int
+     * @throws \Exception
      */
     public function putFile(string $path, string $from)
     {
@@ -135,8 +137,9 @@ class S3 extends Component implements StorageInterface
             'Key' => $this->clean($path)
         ]);
 
-        if ($response['error'])
+        if ($response['error']) {
             return false;
+        }
 
         $date = $response['headers']['last-modified'] ?? null;
 
@@ -156,7 +159,7 @@ class S3 extends Component implements StorageInterface
 
     public function url(string $path)
     {
-        return $this->get_object($path)['@metadata']['effectiveUri'];
+        return $this->s3->getObjectInfo($path)['@metadata']['effectiveUri'];
     }
 
     public function files(string $path)
