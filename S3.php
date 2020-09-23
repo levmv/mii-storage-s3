@@ -35,6 +35,11 @@ class S3 extends Component implements StorageInterface
         ]);
 
         if ($response['error']) {
+
+            if ($response['error']['code'] !== 404) {
+                $this->error($response['error']);
+                throw new \ErrorException();
+            }
             return false;
         }
 
