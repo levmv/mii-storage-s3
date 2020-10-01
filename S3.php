@@ -64,6 +64,23 @@ class S3 extends Component implements StorageInterface
         return (string)$response['body'];
     }
 
+    public function downloadTo(string $path, $to)
+    {
+        $response = $this->s3->getObject([
+            'Bucket' => $this->bucket,
+            'Key' => $this->clean($path),
+            'SaveAs' => $to
+        ]);
+
+        if ($response['error']) {
+            if ($response['error']['code'] === 'NoSuchKey') {
+                $this->error($response['error']);
+            }
+            return false;
+        }
+        return $response;
+    }
+
     /**
      * @param string $path
      * @param mixed  $content Content of the file. May be a resource returned from an fopen call
