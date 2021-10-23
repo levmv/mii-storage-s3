@@ -26,7 +26,7 @@ class S3 extends Component implements StorageInterface
         $this->s3 = new \levmorozov\s3\S3($this->key, $this->secret, $this->endpoint, $this->region);
     }
 
-    public function exist(string $path)
+    public function exist(string $path): bool
     {
 
         $response = $this->s3->getObjectInfo([
@@ -83,48 +83,52 @@ class S3 extends Component implements StorageInterface
 
     /**
      * @param string $path
-     * @param mixed  $content Content of the file. May be a resource returned from an fopen call
-     * @return int|bool
-     * @throws \Exception
+     * @param string|\Stringable|resource $content
+     * @return bool
      */
-    public function put(string $path, $content)
+    public function put(string $path, $content): bool
     {
         if ($content instanceof UploadedFile) {
             return $this->putFile($path, $content->tmp_name);
         }
 
-        $response = $this->s3->putObject([
-            'Bucket' => $this->bucket,
-            'Key' => $this->clean($path),
-            'Body' => $content
-        ]);
+        try {
+            $response = $this->s3->putObject([
+                'Bucket' => $this->bucket,
+                'Key' => $this->clean($path),
+                'Body' => $content
+            ]);
+        } catch (\Throwable $t) {
+            \Mii::error($t);
+            return false;
+        }
 
         if ($response['error']) {
             return $this->error($response['error']);
         }
-        return 1;
+        return true;
     }
 
-    /**
-     * @param string $path Path where to put a file
-     * @param string $from Path to local file
-     * @return bool|int
-     * @throws \Exception
-     */
-    public function putFile(string $path, string $from)
+
+    public function putFile(string $path, string $from): bool
     {
-        $response = $this->s3->putObject([
-            'Bucket' => $this->bucket,
-            'Key' => $this->clean($path),
-            'SourceFile' => $from
-        ]);
+        try {
+            $response = $this->s3->putObject([
+                'Bucket' => $this->bucket,
+                'Key' => $this->clean($path),
+                'SourceFile' => $from
+            ]);
+        } catch (\Throwable $t) {
+            \Mii::error($t);
+            return false;
+        }
         if ($response['error']) {
             return $this->error($response['error']);
         }
-        return 1;
+        return true;
     }
 
-    public function delete(string $path)
+    public function delete(string $path): bool
     {
         $response = $this->s3->deleteObject([
             'Bucket' => $this->bucket,
@@ -144,8 +148,9 @@ class S3 extends Component implements StorageInterface
             'Key' => $this->clean($path)
         ]);
 
-        if ($response['error'])
+        if ($response['error']) {
             return false;
+        }
 
         $length = $response['headers']['content-length'] ?? null;
 
@@ -168,18 +173,17 @@ class S3 extends Component implements StorageInterface
         return $date !== null ? strtotime($date) : false;
     }
 
-    public function copy(string $from, string $to)
+    public function copy(string $from, string $to): bool
     {
         throw new Exception("Not implemented yet");
     }
 
-    public function move(string $from, string $to)
+    public function move(string $from, string $to): bool
     {
-        $this->copy($from, $to);
-        $this->delete($from);
+        throw new Exception("Not implemented yet");
     }
 
-    public function url(string $path)
+    public function url(string $path): string
     {
         return $this->s3->getObjectInfo($path)['@metadata']['effectiveUri'];
     }
@@ -195,7 +199,7 @@ class S3 extends Component implements StorageInterface
         // https://stackoverflow.com/questions/38965266/how-to-create-a-folder-within-s3-bucket-using-php
     }
 
-    protected function clean(string $path)
+    protected function clean(string $path): string
     {
         return \ltrim($path, '/');
     }
