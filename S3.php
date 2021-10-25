@@ -26,6 +26,9 @@ class S3 extends Component implements StorageInterface
         $this->s3 = new \levmorozov\s3\S3($this->key, $this->secret, $this->endpoint, $this->region);
     }
 
+    /**
+     * @throws \ErrorException
+     */
     public function exist(string $path): bool
     {
 
@@ -173,11 +176,17 @@ class S3 extends Component implements StorageInterface
         return $date !== null ? strtotime($date) : false;
     }
 
+    /**
+     * @throws Exception
+     */
     public function copy(string $from, string $to): bool
     {
         throw new Exception("Not implemented yet");
     }
 
+    /**
+     * @throws Exception
+     */
     public function move(string $from, string $to): bool
     {
         throw new Exception("Not implemented yet");
@@ -188,6 +197,9 @@ class S3 extends Component implements StorageInterface
         return $this->s3->getObjectInfo($path)['@metadata']['effectiveUri'];
     }
 
+    /**
+     * @throws Exception
+     */
     public function files(string $path)
     {
         throw new Exception("Not implemented yet");
@@ -204,7 +216,7 @@ class S3 extends Component implements StorageInterface
         return \ltrim($path, '/');
     }
 
-    protected function error($error)
+    protected function error($error): bool
     {
         \Mii::error('S3 Error. ' . $error['code'] . ': ' . $error['message']);
         return false;
