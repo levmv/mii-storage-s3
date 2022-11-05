@@ -1,5 +1,5 @@
 {
-  "name": "levmorozov/mii-storage-s3",
+  "name": "levmv/mii-storage-s3",
   "type": "library",
   "description": "Mii s3 storage component",
   "keywords": [
@@ -12,8 +12,8 @@
   "prefer-stable": true,
   "require": {
     "php": ">=8.0",
-    "levmorozov/mii": "~1.11.0",
-    "levmorozov/amazon-s3-php" : "~0.0.3"
+    "levmv/mii": "~1.11.0",
+    "levmv/amazon-s3-php" : "~0.0.3"
   },
   "autoload": {
     "classmap" : ["S3.php"]
