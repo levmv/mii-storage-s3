@@ -17,13 +17,13 @@ class S3 extends Component implements StorageInterface
     // custom endpoint
     protected ?string $endpoint = null;
 
-    protected \levmorozov\s3\S3 $s3;
+    protected \levmv\s3\S3 $s3;
 
 
     public function init(array $config = []): void
     {
         parent::init($config);
-        $this->s3 = new \levmorozov\s3\S3($this->key, $this->secret, $this->endpoint, $this->region);
+        $this->s3 = new \levmv\s3\S3($this->key, $this->secret, $this->endpoint, $this->region);
     }
 
     /**
