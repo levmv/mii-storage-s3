@@ -6,7 +6,7 @@
     "mii",
     "amazon s3"
   ],
-  "homepage": "https://github.com/levmorozov/mii-storage-s3",
+  "homepage": "https://github.com/levmv/mii-storage-s3",
   "license": "MIT",
   "minimum-stability": "dev",
   "prefer-stable": true,
